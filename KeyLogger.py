@@ -1,5 +1,5 @@
 from pynput.keyboard import Key, Listener
-from User import *
+from user import *
 import threading
 import datetime as t
 import string

@@ -1,12 +1,14 @@
 from user import User
 import pandas as pd
 import numpy as np
+import pandas as pd
 import sqlite3
 from collections import OrderedDict
 from pprint import pprint
 import matplotlib.pyplot as plt
 import itertools
 from textblob import TextBlob
+import datetime 
 
 class Analyzer:
     def __init__(self, user: User):
@@ -37,22 +39,37 @@ class Analyzer:
                 pass
 
         avg_dict = {}
+        time_frame = {}
         avg : float
         prev_log = False
         avg_list = []
         for entry_id, value in logs_dict.items():
             details = logs_dict[entry_id]
-            curr_date = " ".join(details["logged_date"], details["logged_time"])
+            curr_date = " ".join([details["logged_date"], details["logged_time"]])
             if details["status"] == "Idle":
+                avg_list = []
                 avg_dict[curr_date] = 0
-                prev_log = False
-            else:
-                if prev_log:
-                    pass
+            elif details["status_type"] == "word":
+                word = details["term"]
+                if avg_list:
+                    avg_list.append(word)
+                    time_frame["end"] = curr_date
+                    start_time = datetime.datetime.strptime(
+                        time_frame["start"], 
+                        "%m/%d/%y %H:%M:%S"
+                        )
+                    end_time = datetime.datetime.strptime(
+                        time_frame["end"], 
+                        "%m/%d/%y %H:%M:%S")
+                    time_index = end_time - start_time
+                    speed_index = np.average(len(avg_list)) / time_index
+                    avg_list[curr_date] = speed_index
                 else:
-                    pass
-            print(entry_id)
-        
+                    avg_list.append(word)
+                    time_frame["start"] = curr_date
+                    
+        plt.plot(list(avg_dict.keys()),list(avg_dict.values()))
+   
         # print("LOGS HERE")
         # print(len(logs_dict))
         # pprint(logs_dict)
@@ -89,7 +106,7 @@ class Analyzer:
         
         for entry_id, value in logs_dict.items():
             details = logs_dict[entry_id]
-            curr_date = " ".join(details["logged_date"], details["logged_time"])
+            curr_date = " ".join([details["logged_date"], details["logged_time"]])
             status_type = details["status_type"]
             if status_type == "word" or status_type == "special":
                 sentiment_str += details["term"] + " "
@@ -110,3 +127,5 @@ class Analyzer:
                     sentiment_str = ""
                 else:
                     sentiment_dict[curr_date] = 0
+
+        print(sentiment_dict)
