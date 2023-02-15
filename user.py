@@ -1,4 +1,6 @@
 import sqlite3
+import pandas as pd
+# import sqlalchemy
 
 CREATE_USER = "INSERT INTO users (username, password) VALUES (?, ?);"
 GET_ONE_USER = "SELECT username FROM users where username=?;"
@@ -8,6 +10,8 @@ STORE_START_ENTRY = "INSERT INTO entries (start_date, start_time, FK_entries_use
 STORE_END_ENTRY = "UPDATE entries SET end_date=?, end_time=? WHERE entry_id=?;"
 STORE_LOG = "INSERT INTO logs (FK_logs_entry_id, FK_logs_user_id, logged_date, logged_time, status, status_type, term) VALUES (?, ?, ?, ?, ?, ?, ?);"
 GET_ENTRY_ID_BY_DATE_TIME_AND_USER_ID = "SELECT entry_id FROM entries where start_date=? AND start_time=? AND FK_entries_user_id=?;"
+GET_ALL_ENTRY_ID_BY_USER_ID = "SELECT entry_id, start_date, end_date, start_time, end_time FROM entries WHERE FK_entries_user_id=?;"
+GET_LOGS_BY_ENTRY_ID  = "SELECT * FROM logs WHERE FK_logs_entry_id=?;"
 
 class TableConnection():
     def __init__(self, __user_id=None, username=None, password=None):
@@ -147,6 +151,16 @@ class TableConnection():
         entry_id = self.__cur.fetchone()[0]
         return entry_id
 
+    def get_all_entries(self):
+        self.__cur.execute(GET_ALL_ENTRY_ID_BY_USER_ID, (self.__user_id,))
+        entries = self.__cur.fetchall()
+        return entries
+
+    def get_logs_by_entry_id(self, entry_id):
+        entry_id = str(entry_id)
+        self.__cur.execute(GET_LOGS_BY_ENTRY_ID, (entry_id,))
+        return self.__cur.fetchall()
+
 class User():
     def __init__(self, user_id=None, username=None, password=None, logged_in=None):
         self.__username = username
@@ -170,11 +184,12 @@ class User():
     def login(self, username, password):
         try:
             self.set_id(username, password)
-            self.username = username
-            self.password = password
+            self.__username = username
+            self.__password = password
             if not self.logged_in:
                 self.logged_in = True
-                self.table.access_to_table(self.__user_id, self.username, self.password)
+                print("id " + str(self.__user_id))
+                self.table.access_to_table(self.__user_id, self.__username, self.__password)
         except ValueError:
             print("username and password both need to be type string")
 

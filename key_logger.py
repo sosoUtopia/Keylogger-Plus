@@ -86,9 +86,15 @@ class Logger():
         self.counter = Counter(user)
         # with Listener(on_press=self.on_press, on_release=self.on_release, supress=True) as listener:
         #     listener.join()
+    def record(self):
+        # self.counter.start_counter()
+        listener = Listener(on_press=self.on_press, on_release=self.on_release, supress=False)
+        listener.join()
+
 
     def start_log(self):
-        
+        # self.thread = threading.Thread(target=self.record)
+        # self.thread.start()
         self.counter.start_counter()
         with Listener(on_press=self.on_press, on_release=self.on_release, supress=False) as listener:
             listener.start()

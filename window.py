@@ -4,8 +4,12 @@ from key_logger import Logger
 from tkinter import *
 from tkinter import messagebox
 from tktools.tk_functions import TkFunctions as tf
-from analyzer import Analzyer
+from analyzer import Analyzer
 import datetime as t
+from pynput.keyboard import Key, Listener
+import threading
+from collections import OrderedDict
+from pprint import pprint
 # from key_logger import *
 
 class LoginPage(Frame):
@@ -45,7 +49,49 @@ class LoginPage(Frame):
         else:
             print(name, pwd)
             messagebox.showerror("Failed", "Incorrect Login-Passowrd combination!")
+
+class EntriesPage(Frame):
+    def __init__(self, parent, controller, controller_user : User):
+        Frame.__init__(self, parent)
+        self.user = controller_user
+        self.analyzer = Analyzer(self.user)
+        login_button = tf.make_center_button(self, "entries", command=lambda:self.show_all_entries(controller))
+        login_button.pack()
     
+    def show_all_entries(self, controller):
+        print(self.user.get_id())
+        entries = self.user.table.get_all_entries()
+        entries_dict = OrderedDict()
+        entries_set = set()
+        for entry in entries:
+            try: 
+                entries_dict[entry[0]] = {
+                    "start day" : entry[1],
+                    "end day" : entry[2],
+                    "start time": entry[3],
+                    "end time": entry[4],
+                }
+            except TypeError:
+                continue
+        pprint(entries_dict)
+
+        entry_label = tf.make_center_label(self, "Choose entry")
+        entry_label.pack()
+
+        entry = IntVar()
+        entry = tf.make_center_entry(self, 20)
+        entry.pack()
+    
+        login_button = tf.make_center_button(self, "Words Per Minute", command=lambda:self.get_words_per_minute(entry.get(), controller))
+        login_button.pack()
+        pass
+
+    def get_words_per_minute(self, entry, controller):
+        print("hello")
+        print(entry)
+        self.analyzer.get_words_per_minutes(entry)
+        pass
+
 class SessionPage(Frame):
     def __init__(self, parent, controller, controller_user : User):
         Frame.__init__(self, parent)
@@ -56,13 +102,20 @@ class SessionPage(Frame):
         login_button = tf.make_center_button(self, "Start Record", command=lambda:self.start_record(controller))
         login_button.pack()
 
+        login_button = tf.make_center_button(self, "Show All Entries", command=lambda:controller.show_frame(EntriesPage))
+        login_button.pack()
+
     def start_record(self, controller):
         date = t.datetime.now().date()
         time = t.datetime.now().time()
         user_id = self.user.get_id()
-        self.user.table.insert_start_entry(str(date), str(time), user_id,)
-        logger = Logger(self.user)
-        logger.start_log()
+        # self.user.table.insert_start_entry(str(date), str(time), user_id,)
+        # logger = Logger(self.user)
+        # logger.start_log()
+        # logger.counter.counter.start()
+        # with Listener(on_press=logger.on_press, on_release=logger.on_release, suppress = False) as listener:
+        #     listener.start()
+
 
 class RegistrationPage(Frame):
     def __init__(self, parent, controller, controller_user : User):
@@ -109,18 +162,22 @@ class App(Tk):
         self.resizable(0,0)
         root_window = Frame(self)
         root_window.pack()
-        
+
         self.frames = {}
-        for F in (LoginPage, RegistrationPage, SessionPage):
+        for F in (LoginPage, RegistrationPage, SessionPage, EntriesPage):
             frame = F(root_window, self, self.user)
             self.frames[F] = frame
             frame.grid(row=0, column=0, sticky="nsew")
 
     def start_window(self):
         self.show_frame(LoginPage)
+        self.mainloop()
 
     def show_frame(self, page):
         frame = self.frames[page]
         frame.tkraise()
 
-# App().mainloop()
+
+user = User()
+app = App(user)
+app.start_window()
