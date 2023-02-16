@@ -49,26 +49,32 @@ class Analyzer:
             if details["status"] == "Idle":
                 avg_list = []
                 avg_dict[curr_date] = 0
-            elif details["status_type"] == "word":
-                word = details["term"]
-                if avg_list:
-                    avg_list.append(word)
-                    time_frame["end"] = curr_date
-                    start_time = datetime.datetime.strptime(
-                        time_frame["start"], 
-                        "%m/%d/%y %H:%M:%S"
-                        )
-                    end_time = datetime.datetime.strptime(
-                        time_frame["end"], 
-                        "%m/%d/%y %H:%M:%S")
-                    time_index = end_time - start_time
-                    speed_index = np.average(len(avg_list)) / time_index
-                    avg_list[curr_date] = speed_index
-                else:
-                    avg_list.append(word)
-                    time_frame["start"] = curr_date
+            else:
+                if details["status_type"] == "Word":
+                    print("getting")
+                    word = details["term"]
+                    if avg_list:
+                        avg_list.append(word)
+                        time_frame["end"] = curr_date
+                        start_time = datetime.datetime.strptime(
+                            time_frame["start"], 
+                            "%Y-%m-%d %H:%M:%S"
+                            )
+                        end_time = datetime.datetime.strptime(
+                            time_frame["end"], 
+                            "%Y-%m-%d %H:%M:%S")
+                        time_index = end_time - start_time
+                        speed_index = np.divide(np.average(len(avg_list)), time_index.total_seconds)
+                        avg_dict[curr_date] = speed_index
+                    else:
+                        avg_list.append(word)
+                        time_frame["start"] = curr_date
+                        speed_index = np.average(len(avg_list)) 
+                        avg_dict[curr_date] = speed_index
                     
+        pprint(avg_dict)
         plt.plot(list(avg_dict.keys()),list(avg_dict.values()))
+        plt.show();
    
         # print("LOGS HERE")
         # print(len(logs_dict))
