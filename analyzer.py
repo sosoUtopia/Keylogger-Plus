@@ -64,7 +64,7 @@ class Analyzer:
                             time_frame["end"], 
                             "%Y-%m-%d %H:%M:%S")
                         time_index = end_time - start_time
-                        speed_index = np.divide(np.average(len(avg_list)), time_index.total_seconds)
+                        speed_index = np.divide(len(avg_list), time_index.total_seconds())
                         avg_dict[curr_date] = speed_index
                     else:
                         avg_list.append(word)
@@ -73,6 +73,7 @@ class Analyzer:
                         avg_dict[curr_date] = speed_index
                     
         pprint(avg_dict)
+        plt.xticks(rotation=50, fontsize=7)
         plt.plot(list(avg_dict.keys()),list(avg_dict.values()))
         plt.show();
    
