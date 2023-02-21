@@ -89,7 +89,8 @@ class EntriesPage(Frame):
     def get_words_per_minute(self, entry, controller):
         print("hello")
         print(entry)
-        self.analyzer.get_words_per_minutes(entry)
+        self.analyze_entry(entry)
+        self.analyzer.get_words_per_minutes()
         pass
 
 class SessionPage(Frame):
@@ -120,6 +121,7 @@ class SessionPage(Frame):
 class RegistrationPage(Frame):
     def __init__(self, parent, controller, controller_user : User):
         Frame.__init__(self, parent)
+        self.user = controller_user
         self.registration_page(controller)
 
     def registration_page(self, controller):
@@ -140,11 +142,11 @@ class RegistrationPage(Frame):
         registration_page = tf.make_center_button(self, registration_text, lambda:self.register_and_login_after_verify(new_username.get(), new_password.get(), controller))
         registration_page.pack()
 
-    def register_and_login_after_verify(self, name, pwd, controller, controller_user : User):
-        if controller_user.table.if_user_exists(name):
+    def register_and_login_after_verify(self, name, pwd, controller):
+        if self.user.table.if_user_exists(name):
             messagebox.showerror("Failed", "Username already taken!")
         else:
-            controller_user.register(name, pwd)
+            self.user.register(name, pwd)
             controller.show_frame(SessionPage)
 
 class App(Tk):

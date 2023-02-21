@@ -5,15 +5,15 @@ import threading
 import datetime as t
 import string
 
-username = ""
-password = ""
-user = User()
-entry_id = None
+# self.username = ""
+# password = ""
+# self.user = self.user()
+# entry_id = None
 timestamp = t.datetime.now()
 log_every_second = None
 
 class Counter():
-    def __init__(self, user):
+    def __init__(self, user  : User):
         self.counter = threading.Thread(target=self.run)
         self.idle_status = "Idle"
         self.curr_datetime_list = []
@@ -21,6 +21,7 @@ class Counter():
         self.curr_datetime = t.datetime.now()
         self.curr_date = str(t.datetime.now().date())
         self.curr_time = str(t.datetime.now().time())
+        self.user = user
         # self.counter.start()
 
     def start_counter(self):
@@ -39,10 +40,10 @@ class Counter():
         if (self.curr_datetime - timestamp).total_seconds() >= 5:
             timestamp = t.datetime.now()
             for row in self.db_datetime_list:
-                user.table.log_idle_status(row[0], row[1])
+                self.user.table.log_idle_status(row[0], row[1])
                 print(
-                    str(user.table.get_current_entry_id()) 
-                    + " " + str(user.get_id()) + ' ' +row[0] 
+                    str(self.user.table.get_current_entry_id()) 
+                    + " " + str(self.user.get_id()) + ' ' +row[0] 
                     + ' ' + row[1] 
                     + ' ' + self.idle_status 
                     + ' ' + self.idle_status 
@@ -52,9 +53,10 @@ class Counter():
             self.curr_datetime_list.clear()
             
 class Logger():
-    def __init__(self, user):
+    def __init__(self, user : User):
         global timestamp
         timestamp = t.datetime.now()
+        self.user = user
         self.current_key = ""
         self.date = t.datetime.now().date()
         self.time = t.datetime.now().time()
@@ -83,7 +85,7 @@ class Logger():
             "special": self.flush_special
         }
 
-        self.counter = Counter(user)
+        self.counter = Counter(self.user)
         # with Listener(on_press=self.on_press, on_release=self.on_release, supress=True) as listener:
         #     listener.join()
     def record(self):
@@ -97,7 +99,7 @@ class Logger():
         # self.thread.start()
         self.counter.start_counter()
         with Listener(on_press=self.on_press, on_release=self.on_release, supress=False) as listener:
-            listener.start()
+            listener.join()
 
     def on_press(self, key):
         global timestamp
@@ -190,11 +192,11 @@ class Logger():
     def insert_term_to_db(self, status_type):
         self.date = t.datetime.now().date()
         self.time = t.datetime.now().time()
-        user.table.log(self.date, self.time, status_type, self.append_string)
+        self.user.table.log(self.date, self.time, status_type, self.append_string)
         print(" ".join(
             ["log id", 
-            str(user.table.get_current_entry_id()), 
-            str(user.get_id()), 
+            str(self.user.table.get_current_entry_id()), 
+            str(self.user.get_id()), 
             str(self.date), 
             str(self.time), 
             self.active_status, 
@@ -257,24 +259,24 @@ class Logger():
         pass
 
 # def ask_for_login():
-#     global username 
-#     username = str(input("Username: "))
+#     global self.username 
+#     self.username = str(input("self.username: "))
 #     global password
 #     password = str(input("Password: "))
-#     if user.table.is_valid_login(username, password):
+#     if self.user.table.is_valid_login(self.username, password):
 #         global entry_id
-#         user.login(username, password)
+#         self.user.login(self.username, password)
 #         start_date = t.datetime.now().date()
 #         start_time = t.datetime.now().time()
-#         user_id = user.get_id()
-#         user.table.insert_start_entry(start_date, start_time, user_id)
+#         self.user_id = self.user.get_id()
+#         self.user.table.insert_start_entry(start_date, start_time, self.user_id)
+
+#         Logger(self.user)
+#         self.user.table.insert_end_entry(t.datetime.now().date(), t.datetime.now().time().replace())
+#         # self.user.table.disconnect_db()
 #     else:
 #         print("Not Valid!")
 #         ask_for_login()
 #         return
-
+    
 # ask_for_login()
-# print("Recording is in process")
-# Logger(user).start_log()
-# user.table.insert_end_entry(t.datetime.now().date(), t.datetime.now().time().replace())
-# user.table.disconnect_db()
