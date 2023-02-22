@@ -55,13 +55,8 @@ class Analyzer:
                     if avg_list:
                         avg_list.append(word)
                         time_frame["end"] = curr_date
-                        start_time = datetime.datetime.strptime(
-                            time_frame["start"], 
-                            "%Y-%m-%d %H:%M:%S"
-                            )
-                        end_time = datetime.datetime.strptime(
-                            time_frame["end"], 
-                            "%Y-%m-%d %H:%M:%S")
+                        start_time = self.get_date_format(time_frame["start"])
+                        end_time = self.get_date_format(time_frame["end"])
                         time_index = end_time - start_time
                         speed_index = np.divide(len(avg_list), time_index.total_seconds())
                         avg_dict[curr_date] = speed_index
@@ -75,41 +70,55 @@ class Analyzer:
         plt.xticks(rotation=50, fontsize=7)
         plt.plot(list(avg_dict.keys()),list(avg_dict.values()))
         plt.show();
+    
+    def get_date_format(self, time):
+        time = datetime.datetime.strptime(
+            time, 
+            "%Y-%m-%d %H:%M:%S"
+            )
+        return time
    
-        # print("LOGS HERE")
-        # print(len(self.logs_dict))
-        # pprint(self.logs_dict)
-
     def get_sentiments(self, entry_id):
         nullifiable_keys = {
             'Key.shift', 'Key.shift_l', 'Key.shift_r',
             'Key.space'
         }
         sentiment_dict = {}
+        current_sentiment = {}
         sentiment_str = str;
         
         for entry_id, value in self.logs_dict.items():
+            word = details["term"]
             details = self.logs_dict[entry_id]
             curr_date = " ".join([details["logged_date"], details["logged_time"]])
             status_type = details["status_type"]
-            if status_type == "word" or status_type == "special":
-                sentiment_str += details["term"] + " "
-            elif status_type == "command":
-                if details['term'] not in nullifiable_keys:
-                    if len(sentiment_str) > 0:
-                        sentiment_str += details['term']
-                        sentiment : float
-                        sentiment = TextBlob.polarity(sentiment_str)
-                        sentiment_dict[curr_date] = sentiment
-                        sentiment_str = ""
-            elif status_type == "Idle":
-                curr_date = " ".join(details["logged_date"], details["logged_time"])
-                if len(sentiment_str) > 0:
+            if status_type == "Word" or status_type == "Special" or status_type == "Punctuation":
+                if word not in nullifiable_keys:
+                    current_sentiment['time'] = curr_date
+                    if sentiment_str:
+                        sentiment_str = " ".join([sentiment_str, word])
+                        current_sentiment["phrase"] = sentiment_str
+                    else:
+                        sentiment_str = word
+                        current_sentiment["phrase"] = sentiment_str
+            # elif status_type == "command":
+            elif details['term'] not in nullifiable_keys:
+                phrase = current_sentiment["phrase"]
+                time = current_sentiment["time"]
+                if phrase:
                     sentiment : float
-                    sentiment = TextBlob.polarity(sentiment_str)
-                    sentiment_dict[curr_date] = sentiment
-                    sentiment_str = ""
-                else:
-                    sentiment_dict[curr_date] = 0
+                    sentiment = TextBlob.polarity(phrase)
+                    sentiment_dict[time]["phrase"] = phrase
+                    sentiment_dict[time]["sentiment"] = sentiment
+                    current_sentiment["phrase"] = None
+                    current_sentiment["time"] = None
+                if status_type == "Idle":
+                    sentiment_dict[curr_date]["phrase"] = None
+                    sentiment_dict[curr_date]["sentiment"] = 0
+                
+        pprint(sentiment_dict)
+        plt.xticks(rotation=50, fontsize=7)
+        plt.plot(list(sentiment_dict.keys()),list(sentiment_dict.values()))
+        plt.show();
 
         print(sentiment_dict)

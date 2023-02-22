@@ -30,4 +30,4 @@ def ask_for_login():
 ask_for_login()
 Logger(user).start_log()
 user.table.insert_end_entry(t.datetime.now().date(), t.datetime.now().time().replace())
-# user.table.disconnect_db();
+user.table.disconnect_db
